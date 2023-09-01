@@ -46,6 +46,7 @@ function App() {
 
   // audio source and context
   const [audio, setAudio] = useState(null);
+  const [audioClone, setAudioClone] = useState(null);
   const [source, setSource] = useState(null);
   const [audioContext, setAudioContext] = useState(null);
   const [dataArray, setDataArray] = useState(null);
@@ -65,12 +66,18 @@ function App() {
     ad.play();
     setAudio(ad);
 
-    let context = new AudioContext();
-
-
     // Create a new HTMLMediaElement instance
-    let newAd = ad.cloneNode(true);
+    // might be creating a memory issue where there is multiple
+    // media element, adding to useState to remove the old one
+    if(audioClone !== null) {
+      audioClone = null;
+      setAudioClone(audioClone);
+    } 
 
+    let newAd = ad.cloneNode(true);
+    setAudioClone(newAd);
+
+    let context = new AudioContext();
     let src = context.createMediaElementSource(newAd);
     setSource(src);
     setAudioContext(context);
@@ -86,6 +93,7 @@ function App() {
 
   // -- scene functions -- //
 
+  // Box
   // creates a box with mesh
   function Box(props) {
     // This reference gives us direct access to the THREE.Mesh object
@@ -120,6 +128,7 @@ function App() {
     );
   }
 
+  // TextOnBox
   // creates a box object with text
   function TextOnBox({ position, text }) {
     const textPosition = [position[0], position[1], position[2] + 0.6];
@@ -134,6 +143,7 @@ function App() {
     );
   }
 
+  // Icosahedron
   // create an icosahedron
   // update to animate with the music
   function Icosahedron(props) {
@@ -142,7 +152,6 @@ function App() {
 
     // animation rendering
     useFrame((state, delta, xrFrame) => {
-      // console.log("icosahedron ", ref, analyser);
       const cmesh = ref.current;
       const cgeo = cmesh.geometry;
       const cpos = cgeo.attributes.position;
@@ -167,15 +176,11 @@ function App() {
         let upperAvg = avg(upperHalfArray);
         let upperAvgFr = upperAvg / upperHalfArray.length;
 
-
         // create patterns on the icoshedron mesh in 3D with the bass and trebel frequencies
         let bassFr = modulate(Math.pow(lowerMaxFr, 0.8), 0, 1, 0.5, 8);
         let treFr = modulate(upperAvgFr, 0, 1, 0.5, 4);
 
-        // console.log(lowerMax, upperAvg, bassFr, treFr);
-
         for (let i = 0; i < cpos.count; i++) {
-          //console.log(cpos.getX(i));
           let vx = cpos.getX(i);
           let vy = cpos.getY(i);
           let vz = cpos.getZ(i);
@@ -197,8 +202,6 @@ function App() {
           let noise_y = vy + time * rf * 8;
           let noise_z = vz + time * rf * 9;
 
-          // console.log(noise_x, noise_y, noise_z);
-
           let distance = offset;
           distance += bassFr;
           distance += noise3D(noise_x, noise_y, noise_z) * amp * treFr;
@@ -208,40 +211,11 @@ function App() {
           vy *= distance;
           vz *= distance;
 
-          
-
-          // console.log(offset, vx, vy, vz);
-
           // Update the vertex position with the new scaled vector
           cpos.setXYZ(i, vx, vy, vz);
         }
 
         cpos.needsUpdate = true;
-
-      //   let cmesh = ref.current;
-      //   cmesh.position.forEach(function (vertex, i) {
-      //     let offset = cmesh.geometry.parameters.radius;
-      //     let amp = 7;
-      //     let time = window.performance.now();
-
-      //     vertex.normalize();
-
-      //     let rf = 0.00001;
-      //     let noise_x = vertex.x + time * rf * 7;
-      //     let noise_y = vertex.y + time * rf * 8;
-      //     let noise_z = vertex.z + time * rf * 9
-
-      //     let distance = offset;
-      //     distance += bassFr;
-      //     distance += noise3D(noise_x, noise_y, noise_z) * amp * treFr;
-
-      //     vertex.multiplyScalar(distance);
-      //   });
-
-      //   cmesh.geometry.verticesNeedUpdate = true;
-      //   cmesh.geometry.normalsNeedUpdate = true;
-      //   cmesh.geometry.computeVertexNormals();
-      //   cmesh.geometry.computeFaceNormals();
       }
     });
 
@@ -262,7 +236,6 @@ function App() {
 
     // animation rendering
     useFrame((state, delta, xrFrame) => {
-      //console.log("plane ", ref, analyser);
       const cmesh = ref.current;
       const cgeo = cmesh.geometry;
       const cpos = cgeo.attributes.position;
@@ -275,47 +248,30 @@ function App() {
 
         analyser.getByteFrequencyData(da);
 
-        let lowerHalfArray = da.slice(0, (da.length / 2) - 1);
-        let lowerMax = max(lowerHalfArray);
-        let lowerMaxFr = lowerMax / lowerHalfArray.length;
-
         let upperHalfArray = da.slice((da.length / 2) - 1, da.length - 1);
         let upperAvg = avg(upperHalfArray);
         let upperAvgFr = upperAvg / upperHalfArray.length;
 
         // create patterns on the plane mesh in 2D with the bass frequencies
-        //let bassFr = modulate(Math.pow(lowerMaxFr, 0.8), 0, 1, 0, 8);
-        //let treFr = modulate(upperAvgFr, 0, 1, 0, 4);
         let distortFr = modulate(upperAvgFr, 0, 1, 0.5, 4);
 
         for (let i = 0; i < cpos.count; i++) {
-          //console.log(cpos.getX(i));
           let vx = cpos.getX(i);
           let vy = cpos.getY(i);
 
-          // console.log(vx, vy);
-  
           let amp = 0.8;
           let time = Date.now();
   
           let noise_x = vx + time * 0.0003;
           let noise_y = vy + time * 0.0001;
-          //let distance = (noise2D(noise_x, noise_y) + 0) * bassFr * amp;
           let distance = (noise2D(noise_x, noise_y) + 0) * distortFr * amp;
-          //let distance = (noise2D(noise_x, noise_y) + 0) * treFr * amp
           let vz = distance;
           
           //console.log(vx, vy, vz);
           cpos.setXYZ(i, vx, vy, vz);
         }
         
-
         cpos.needsUpdate = true;
-
-        //cgeo.verticesNeedUpdate = true;
-        //cgeo.normalsNeedUpdate = true;
-        // cmesh.geometry.computeVertexNormals();
-        // cmesh.geometry.computeFaceNormals();
       }
     });
 
@@ -331,19 +287,9 @@ function App() {
     );
   }
 
-
-
-  // useEffect(() => {
-
-
-  // }, []);
-
-
-
-
   return (
     <>
-      <audio id="audio" controls=""></audio>
+      <audio id="audio" controls="" loop></audio>
       <Canvas>
         <OrbitControls />
         <PerspectiveCamera makeDefault position={[
@@ -362,7 +308,6 @@ function App() {
         <Icosahedron position={[0, -1.1, 0]} />
       </Canvas>
     </>
-
   );
 }
 
