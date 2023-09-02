@@ -1,6 +1,8 @@
 # AInural Beats Frontend
 Using ThreeJS to create a vizualiser for binural beats generated with [MusicGen](https://huggingface.co/spaces/facebook/MusicGen)
 
+[Generator Script](https://github.com/shamantechnology/ainural-beats)
+
 Created with react and react-three-fiber/react-three-drei
 
 [DEMO](https://ainural-beats-frontend.vercel.app/)
