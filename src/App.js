@@ -1,6 +1,6 @@
 
-import React, { useRef, useState, useEffect } from 'react'
-import { Canvas, useFrame, Vector3 } from '@react-three/fiber'
+import React, { useRef, useState } from 'react'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, Text, PerspectiveCamera } from '@react-three/drei';
 import { createNoise2D, createNoise3D } from 'simplex-noise';
 
@@ -45,11 +45,6 @@ function App() {
   const noise2D = createNoise2D();
 
   // audio source and context
-  const [audio, setAudio] = useState(null);
-  const [audioClone, setAudioClone] = useState(null);
-  const [source, setSource] = useState(null);
-  const [audioContext, setAudioContext] = useState(null);
-  const [dataArray, setDataArray] = useState(null);
   const [analyser, setAnalyser] = useState(null);
 
   // -- audio functions -- //
@@ -61,33 +56,23 @@ function App() {
   // live ML generation
   function play(beat) {
     // set up audio vars
-    let ad = document.getElementById("audio");
+    const ad = document.getElementById("audio");
     ad.src = beat;
     ad.play();
-    setAudio(ad);
 
     // Create a new HTMLMediaElement instance
     // might be creating a memory issue where there is multiple
     // media element, adding to useState to remove the old one
-    if(audioClone !== null) {
-      audioClone = null;
-      setAudioClone(audioClone);
-    } 
+    const audioClone = ad.cloneNode(true);
+    const audioContext = new AudioContext();
+    const audioSource = audioContext.createMediaElementSource(audioClone);
 
-    let newAd = ad.cloneNode(true);
-    setAudioClone(newAd);
-
-    let context = new AudioContext();
-    let src = context.createMediaElementSource(newAd);
-    setSource(src);
-    setAudioContext(context);
-
-    if (context.state === "running") {
-      let al = context.createAnalyser();
-      al.connect(context.destination);
-      al.fftSize = 512;
-      src.connect(al);
-      setAnalyser(al);
+    if (audioContext.state === "running") {
+      const audioAnalyser = audioContext.createAnalyser();
+      audioAnalyser.connect(audioContext.destination);
+      audioAnalyser.fftSize = 512;
+      audioSource.connect(audioAnalyser);
+      setAnalyser(audioAnalyser);
     }
   }
 
@@ -281,7 +266,7 @@ function App() {
       rotation={[0, 0, 0]} 
       position={[0, -1, -3]} 
       receiveShadow>
-        <planeGeometry args={[30, 30, 100, 100]} />
+        <planeGeometry args={[50, 50, 200, 200]} />
         <meshBasicMaterial wireframe color={0x6904ce} opacity={0.3} transparent />
       </mesh>
     );
@@ -301,9 +286,9 @@ function App() {
 
         <WireframePlane />
 
-        <TextOnBox position={[-1.5, 2.5, 0]} text="Relax" audio={audio} />
-        <TextOnBox position={[0, 2.5, 0]} text="Meditate" audio={audio} />
-        <TextOnBox position={[1.5, 2.5, 0]} text="Sleep" audio={audio} />
+        <TextOnBox position={[-1.5, 2.5, 0]} text="Relax" />
+        <TextOnBox position={[0, 2.5, 0]} text="Meditate" />
+        <TextOnBox position={[1.5, 2.5, 0]} text="Sleep" />
 
         <Icosahedron position={[0, -1.1, 0]} />
       </Canvas>
