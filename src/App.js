@@ -9,6 +9,8 @@ import sleepAudio from "./sleep_test2.wav"
 import relaxAudio from "./relax_test.wav"
 import meditateAudio from "./meditate_test2.wav"
 
+import { Analytics } from '@vercel/analytics/react';
+
 
 // -- math functions -- //
 function fractionate(val, minVal, maxVal) {
@@ -274,6 +276,7 @@ function App() {
 
   return (
     <>
+      <Analytics />
       <audio id="audio" controls="" loop></audio>
       <Canvas>
         <OrbitControls />
