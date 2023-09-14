@@ -7,7 +7,7 @@ Created with react and react-three-fiber/react-three-drei
 
 [DEMO](https://ainural-beats-frontend.vercel.app/)
 
-# Dev Notes
+## Dev Notes
 - Currently used create-react-app but moving to Next.js
 
 - Working on adding procedurally generated backgounds for the central Orb to float in
